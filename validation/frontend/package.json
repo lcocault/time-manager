@@ -1,0 +1,15 @@
+{
+  "name": "validation-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "test": "cucumber-js --publish-quiet --require ./steps/**/*.js ./features/**/*.feature",
+    "test:local": "start-server-and-test \"npm --prefix ../../frontend run dev -- --host 127.0.0.1 --port 4173\" http://127.0.0.1:4173 \"npm test\"",
+    "install:browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^11.1.0",
+    "playwright": "^1.54.2",
+    "start-server-and-test": "^2.1.2"
+  }
+}
