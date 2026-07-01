@@ -9,11 +9,11 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.olicard</groupId>
-    <artifactId>time-manager-backend</artifactId>
+    <groupId>fr.tools</groupId>
+    <artifactId>personal-manager-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>time-manager-backend</name>
-    <description>Personal time manager backend</description>
+    <name>personal-manager-backend</name>
+    <description>Personal manager backend</description>
 
     <properties>
         <java.version>17</java.version>

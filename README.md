@@ -1,6 +1,6 @@
-# time-manager
+# personal-manager
 
-Un gestionnaire de tâches personnel inspiré des méthodes de Fabien Olicard, avec matrice d'Eisenhower étendue, synchronisation d'agendas pro/perso et planification intelligente sur 5 jours.
+Un personal manager orienté productivité, avec matrice d'Eisenhower étendue, synchronisation d'agendas pro/perso, planification intelligente et gestion des risques.
 
 ## Stack
 
@@ -11,8 +11,8 @@ Un gestionnaire de tâches personnel inspiré des méthodes de Fabien Olicard, a
 ## Lancer en local
 
 1. Démarrer PostgreSQL : `docker compose up -d`
-2. Lancer le backend : `cd /tmp/workspace/lcocault/time-manager/backend && mvn spring-boot:run`
-3. Lancer le frontend : `cd /tmp/workspace/lcocault/time-manager/frontend && npm install && npm run dev`
+2. Lancer le backend : `cd backend && mvn spring-boot:run`
+3. Lancer le frontend : `cd frontend && npm install && npm run dev`
 
 ## Endpoints principaux
 
@@ -21,6 +21,10 @@ Un gestionnaire de tâches personnel inspiré des méthodes de Fabien Olicard, a
 - `PATCH /api/tasks/{id}`
 - `DELETE /api/tasks/{id}`
 - `GET /api/planning/5days`
+- `POST /api/risks`
+- `GET /api/risks`
+- `PATCH /api/risks/{id}`
+- `DELETE /api/risks/{id}`
 
 ## Tests de validation (BDD)
 

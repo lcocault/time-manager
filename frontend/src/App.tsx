@@ -2,8 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import { EisenhowerMatrix } from './components/EisenhowerMatrix'
 import { PlanningPage } from './components/PlanningPage'
+import { RiskForm } from './components/RiskForm'
+import { RiskRegister } from './components/RiskRegister'
 import { TaskForm } from './components/TaskForm'
-import { createTask, getFiveDayPlanning, listTasks } from './services/api'
+import { createRisk, createTask, getFiveDayPlanning, listRisks, listTasks } from './services/api'
+import type { CreateRiskInput, Risk } from './types/risk'
 import type { CreateTaskInput, PlanningSlot, Task } from './types/task'
 
 const fallbackTasks: Task[] = [
@@ -52,6 +55,28 @@ const fallbackPlanning: PlanningSlot[] = [
   },
 ]
 
+const fallbackRisks: Risk[] = [
+  {
+    id: 1,
+    riskFactor: 'Retard fournisseur critique',
+    consequences: 'Glissement de 2 semaines sur la recette',
+    impactNature: 'Planning et charge équipe',
+    measurementMode: 'SCALE',
+    initialImpactScale: 4,
+    initialImpactEuros: null,
+    initialProbabilityScale: 3,
+    initialProbabilityValue: null,
+    actionId: 1,
+    action: 'Ajouter un fournisseur de secours',
+    actionNature: 'BOTH',
+    owner: 'BOTH',
+    mitigatedImpactScale: 2,
+    mitigatedImpactEuros: null,
+    correctedProbabilityScale: 2,
+    correctedProbabilityValue: null,
+  },
+]
+
 function computePriorityScore(task: CreateTaskInput) {
   const weight = { LOW: 1, MEDIUM: 2, HIGH: 3 } as const
   return weight[task.importance] * weight[task.urgency]
@@ -60,18 +85,25 @@ function computePriorityScore(task: CreateTaskInput) {
 function App() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [slots, setSlots] = useState<PlanningSlot[]>([])
+  const [risks, setRisks] = useState<Risk[]>([])
   const [status, setStatus] = useState('Chargement des données...')
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [loadedTasks, planning] = await Promise.all([listTasks(), getFiveDayPlanning()])
+        const [loadedTasks, planning, loadedRisks] = await Promise.all([
+          listTasks(),
+          getFiveDayPlanning(),
+          listRisks(),
+        ])
         setTasks(loadedTasks)
         setSlots(planning.slots)
+        setRisks(loadedRisks)
         setStatus('API connectée')
       } catch {
         setTasks(fallbackTasks)
         setSlots(fallbackPlanning)
+        setRisks(fallbackRisks)
         setStatus('Mode démonstration (backend indisponible)')
       }
     }
@@ -104,11 +136,26 @@ function App() {
     }
   }
 
+  const handleCreateRisk = async (input: CreateRiskInput) => {
+    try {
+      const createdRisk = await createRisk(input)
+      setRisks((currentRisks) => [createdRisk, ...currentRisks])
+      setStatus('API connectée')
+    } catch {
+      const localRisk: Risk = {
+        id: Date.now(),
+        ...input,
+      }
+      setRisks((currentRisks) => [localRisk, ...currentRisks])
+      setStatus('Mode démonstration (backend indisponible)')
+    }
+  }
+
   return (
     <main className="app-shell">
       <header className="hero-banner panel">
         <div>
-          <p className="eyebrow">Time Manager personnel</p>
+          <p className="eyebrow">Personal Manager</p>
           <h1>Organisation intelligente des tâches et du temps</h1>
           <p>
             Priorisation Eisenhower 3 × 3, synchronisation des créneaux pro/perso et planning sur 5 jours.
@@ -135,6 +182,10 @@ function App() {
             ))}
           </ul>
         </section>
+      </section>
+      <section className="layout-grid">
+        <RiskForm onSubmit={handleCreateRisk} />
+        <RiskRegister risks={risks} />
       </section>
       <EisenhowerMatrix tasks={sortedTasks} />
       <PlanningPage slots={slots} />

@@ -1,4 +1,5 @@
 import type { CreateTaskInput, PlanningResponse, Task } from '../types/task'
+import type { CreateRiskInput, Risk } from '../types/risk'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api'
 
@@ -26,4 +27,18 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
 export async function getFiveDayPlanning(): Promise<PlanningResponse> {
   const response = await fetch(`${API_BASE_URL}/planning/5days`)
   return parseJson<PlanningResponse>(response)
+}
+
+export async function listRisks(): Promise<Risk[]> {
+  const response = await fetch(`${API_BASE_URL}/risks`)
+  return parseJson<Risk[]>(response)
+}
+
+export async function createRisk(input: CreateRiskInput): Promise<Risk> {
+  const response = await fetch(`${API_BASE_URL}/risks`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  })
+  return parseJson<Risk>(response)
 }

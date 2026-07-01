@@ -10,6 +10,7 @@ let browser
 let context
 let page
 let tasks
+let risks
 
 BeforeAll(async function () {
   browser = await chromium.launch({ headless: true })
@@ -26,6 +27,7 @@ AfterAll(async function () {
 
 Given('que je charge l application frontend avec une API simulee', async function () {
   tasks = []
+  risks = []
   context = await browser.newContext()
   page = await context.newPage()
 
@@ -84,6 +86,49 @@ Given('que je charge l application frontend avec une API simulee', async functio
     })
   })
 
+  await page.route('**/api/risks', async (route) => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(risks),
+      })
+      return
+    }
+
+    if (route.request().method() === 'POST') {
+      const payload = JSON.parse(route.request().postData() || '{}')
+      const created = {
+        id: Date.now(),
+        riskFactor: payload.riskFactor,
+        consequences: payload.consequences,
+        impactNature: payload.impactNature,
+        measurementMode: payload.measurementMode || 'SCALE',
+        initialImpactScale: payload.initialImpactScale ?? 3,
+        initialImpactEuros: payload.initialImpactEuros ?? null,
+        initialProbabilityScale: payload.initialProbabilityScale ?? 3,
+        initialProbabilityValue: payload.initialProbabilityValue ?? null,
+        actionId: payload.actionId ?? 1,
+        action: payload.action,
+        actionNature: payload.actionNature || 'BOTH',
+        owner: payload.owner || 'BOTH',
+        mitigatedImpactScale: payload.mitigatedImpactScale ?? 2,
+        mitigatedImpactEuros: payload.mitigatedImpactEuros ?? null,
+        correctedProbabilityScale: payload.correctedProbabilityScale ?? 2,
+        correctedProbabilityValue: payload.correctedProbabilityValue ?? null,
+      }
+      risks.unshift(created)
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify(created),
+      })
+      return
+    }
+
+    await route.continue()
+  })
+
   await page.goto(FRONTEND_BASE_URL)
 })
 
@@ -102,4 +147,23 @@ Then('je vois la tache {string} dans la liste priorisee', async function (title)
 
 Then('le statut affiche est {string}', async function (status) {
   await page.locator('.status-pill').filter({ hasText: status }).first().waitFor({ state: 'visible' })
+})
+
+When('je saisis un nouveau risque {string} et je valide', async function (riskFactor) {
+  await page.getByLabel('Facteur de risque').fill(riskFactor)
+  await page.getByLabel('Nature de l’impact').fill('Impact planning')
+  await page.getByLabel('Conséquences').fill('Risque de glissement de planning')
+  await page.getByLabel('Id Action (TimeManager)').fill('42')
+  await page.getByRole('textbox', { name: 'Action' }).fill('Ajouter une action preventive')
+  await page.getByRole('button', { name: 'Ajouter le risque' }).click()
+})
+
+Then('je vois le risque {string} dans le registre', async function (riskFactor) {
+  await page.locator('.risk-list li p', { hasText: riskFactor }).first().waitFor({ state: 'visible' })
+  const itemCount = await page.locator('.risk-list li').count()
+  assert.ok(itemCount >= 1)
+})
+
+Then('je vois l action de risque {string}', async function (actionName) {
+  await page.locator('.risk-details span', { hasText: actionName }).first().waitFor({ state: 'visible' })
 })
